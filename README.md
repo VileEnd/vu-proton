@@ -45,6 +45,25 @@ protontricks (Arch: `pacman -S protontricks`) — the scripts automatically
 prefer it. Also: nix caches github flakes for an hour, so after an update
 run once with `nix run --refresh github:VileEnd/vu-proton#vu`.
 
+## fresh machine, full sequence
+
+Arch (or similar):
+
+```sh
+sudo pacman -S steam protontricks nix
+sudo systemctl enable --now nix-daemon.socket
+echo "experimental-features = nix-command flakes" | sudo tee -a /etc/nix/nix.conf
+# steam: log in, enable Proton for all titles (Settings → Compatibility)
+steam steam://install/1238820
+steam -applaunch 1238820 singleplayer    # once — EA login happens here, then quit
+nix run github:VileEnd/vu-proton#vu-setup
+nix run github:VileEnd/vu-proton#vu
+```
+
+NixOS: add `programs.steam.enable = true;` to your config (protontricks not
+needed — the nix one works there), then the same steam steps and the same
+two `nix run` commands.
+
 ## credits
 
 Thanks **Envii** (`enviipv` on Discord, BF3: Reality Mod) for the original
