@@ -41,6 +41,19 @@ let
       pfx="''${bf3lib:+$bf3lib/steamapps/compatdata/${appid}/pfx}"
       exe="''${pfx:+$pfx/drive_c/users/steamuser/AppData/Local/VeniceUnleashed/client/vu.exe}"
     }
+    # Prefer the host distro's protontricks when present: the nixpkgs build
+    # has the Steam Runtime container patched off, which is correct on NixOS
+    # but breaks GPU access (OpenGL/DXVK errors) on other distros. The nix
+    # copy stays as fallback so the commands always work.
+    PT_LAUNCH="$(command -v protontricks-launch)"
+    PT="$(command -v protontricks)"
+    for p in "$HOME/.local/bin" /usr/local/bin /usr/bin; do
+      if [ -x "$p/protontricks-launch" ]; then
+        PT_LAUNCH="$p/protontricks-launch"
+        [ -x "$p/protontricks" ] && PT="$p/protontricks"
+        break
+      fi
+    done
   '';
 in
 {
@@ -50,6 +63,7 @@ in
       protontricks
       curl
       procps
+      findutils
     ];
     text = ''
       ${findSteamLib}
@@ -57,6 +71,10 @@ in
       if [ "''${1:-}" = "--check" ]; then
         locate_vu || exit 1
         echo "✓ Steam:          $steamroot"
+        case "$PT_LAUNCH" in
+          /nix/store/*) echo "- protontricks:   nix copy (fine on NixOS; other distros: install your distro's protontricks for GPU access)" ;;
+          *) echo "✓ protontricks:   $PT_LAUNCH (host)" ;;
+        esac
         if [ -n "$bf3lib" ]; then
           echo "✓ BF3 installed:  $bf3lib/steamapps"
         else
@@ -67,7 +85,8 @@ in
         else
           echo "✗ Proton prefix missing — run: steam -applaunch ${appid} singleplayer"
         fi
-        if [ -f "''${pfx:-}/drive_c/Program Files/Electronic Arts/EA Desktop/EA Desktop/EADesktop.exe" ]; then
+        if find "''${pfx:-/nonexistent}/drive_c/Program Files/Electronic Arts" \
+             -name EADesktop.exe -print -quit 2>/dev/null | grep -q .; then
           echo "✓ EA Desktop:     present in the prefix"
         else
           echo "✗ EA Desktop not set up — the first BF3 launch installs it"
@@ -112,10 +131,11 @@ in
       echo ">> Downloading the latest VU installer..."
       curl -fLo "$installer" https://veniceunleashed.net/files/vu.exe
       echo ">> Running the installer inside the BF3 prefix (keep default paths)..."
-      protontricks-launch --appid ${appid} "$installer"
+      "$PT_LAUNCH" --appid ${appid} "$installer"
       echo ">> Installing d3dcompiler_47 into the prefix..."
-      protontricks ${appid} d3dcompiler_47
-      echo ">> Done. Launch with: vu"
+      "$PT" ${appid} d3dcompiler_47
+      echo ">> Done. Launch: vu (NixOS) / nix run github:VileEnd/vu-proton#vu"
+      echo ">> Non-NixOS + graphics errors on launch? See README Troubleshooting."
     '';
   };
 
@@ -140,7 +160,7 @@ in
         echo "      and save it as: $inst/server.key" >&2
       fi
       # extra args pass through, e.g.: vu-server -headless
-      exec protontricks-launch --appid ${appid} "$exe" -server -dedicated "$@"
+      exec "$PT_LAUNCH" --appid ${appid} "$exe" -server -dedicated "$@"
     '';
   };
 
@@ -157,9 +177,9 @@ in
       fi
       if [ "''${1:-}" = "--verify" ]; then
         shift
-        exec protontricks-launch --appid ${appid} "$exe" -console -wait -activate -lsx "$@"
+        exec "$PT_LAUNCH" --appid ${appid} "$exe" -console -wait -activate -lsx "$@"
       fi
-      exec protontricks-launch --appid ${appid} "$exe" "$@"
+      exec "$PT_LAUNCH" --appid ${appid} "$exe" "$@"
     '';
   };
 }

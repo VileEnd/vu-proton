@@ -49,6 +49,25 @@ Server/
 Mod dev loop: `vu-server` in one terminal, `vu` in another, connect to
 localhost. Details: [VU docs](https://docs.veniceunleashed.net).
 
+## Troubleshooting: VU exits instantly (OpenGL/DXVK errors) on non-NixOS
+
+Symptoms: `couldn't initialize OpenGL` / `Failed to initialize DXVK`, VU
+exits right after start. Cause: the nix-packaged protontricks has the Steam
+Runtime container disabled — correct on NixOS, but on other distros modern
+Proton then runs without working GPU drivers. Two fixes:
+
+1. **Install your distro's protontricks** (Arch: `yay -S protontricks`;
+   elsewhere: `pipx install protontricks`). The vu commands automatically
+   prefer a host protontricks when one exists — no other change needed.
+   `vu-setup -- --check` shows which copy is in use.
+2. **Or launch through Steam itself** (full Proton container): BF3 →
+   Properties → Launch Options:
+   ```
+   eval $( echo "%command%" | sed 's|steamapps/common/Battlefield 3/bf3.exe|steamapps/compatdata/1238820/pfx/drive_c/users/steamuser/AppData/Local/VeniceUnleashed/client/vu.exe|' )
+   ```
+   Then BF3's Play button (or `steam -applaunch 1238820`) starts VU.
+   Remove the launch options to get vanilla BF3 back.
+
 ## Credits
 
 Thanks to **Envii** (`enviipv` on Discord, BF3: Reality Mod) for the
