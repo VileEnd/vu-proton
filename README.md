@@ -6,8 +6,14 @@ running inside BF3's Steam **Proton** prefix. Needs
 
 ## TL;DR
 
-1. Install **BF3 via Steam** (Proton) and launch it once, then quit.
-   The EA app stays open — leave it running for step 2.
+1. Install **BF3 via Steam** and launch it once, then quit — straight from
+   the CLI, no Steam UI browsing:
+   ```sh
+   steam steam://install/1238820      # install BF3
+   steam steam://rungameid/1238820    # launch it once, then quit
+   ```
+   (Windows game — enable Proton/Steam Play in Steam settings if you never
+   have.) The EA app stays open — leave it running for step 2.
 2. `nix run github:VileEnd/vu-proton#vu-setup`
 3. `nix run github:VileEnd/vu-proton#vu` — play.
 

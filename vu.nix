@@ -60,12 +60,12 @@ in
         if [ -n "$bf3lib" ]; then
           echo "✓ BF3 installed:  $bf3lib/steamapps"
         else
-          echo "✗ BF3 not installed — install it via Steam (Proton, appid ${appid})"
+          echo "✗ BF3 not installed — run: steam steam://install/${appid}"
         fi
         if [ -n "$pfx" ] && [ -d "$pfx" ]; then
           echo "✓ Proton prefix:  BF3 was launched at least once"
         else
-          echo "✗ Proton prefix missing — launch BF3 once via Steam"
+          echo "✗ Proton prefix missing — run: steam steam://rungameid/${appid}"
         fi
         if [ -f "''${pfx:-}/drive_c/Program Files/Electronic Arts/EA Desktop/EA Desktop/EADesktop.exe" ]; then
           echo "✓ EA Desktop:     present in the prefix"
@@ -94,17 +94,19 @@ in
       # is right after closing BF3) — normal VU launches don't need it.
       locate_vu || exit 1
       if [ -z "$bf3lib" ]; then
-        echo "BF3 is not installed — install it via Steam (Proton) first." >&2
+        echo "BF3 is not installed — run: steam steam://install/${appid}" >&2
         echo "Full preflight: vu-setup --check" >&2
         exit 1
       fi
       if [ ! -d "$pfx" ]; then
-        echo "BF3 Proton prefix missing — launch BF3 once via Steam first." >&2
+        echo "BF3 Proton prefix missing — launch it once first:" >&2
+        echo "  steam steam://rungameid/${appid}" >&2
         exit 1
       fi
       if ! pgrep -f EADesktop.exe >/dev/null 2>&1; then
         echo "WARNING: EA app not running — setup may fail. Launch BF3 briefly" >&2
-        echo "(EA stays open after closing it), then re-run vu-setup." >&2
+        echo "(steam steam://rungameid/${appid} — EA stays open after quitting)," >&2
+        echo "then re-run vu-setup." >&2
       fi
       installer="''${XDG_CACHE_HOME:-$HOME/.cache}/vu-installer.exe"
       echo ">> Downloading the latest VU installer..."
