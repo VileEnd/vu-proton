@@ -11,7 +11,23 @@ nix run github:VileEnd/vu-proton#vu         # play  (--verify re-checks ownershi
 nix run github:VileEnd/vu-proton#vu-server  # dedicated server (add -headless)
 ```
 
-Steam library elsewhere? `STEAM_LIBRARY=/path/to/Steam nix run ...`
+Not sure where you stand? Run the preflight:
+
+```sh
+nix run github:VileEnd/vu-proton#vu-setup -- --check
+```
+
+```
+✓ Steam:          /home/you/.local/share/Steam
+✓ BF3 installed:  ...
+✗ Proton prefix missing — launch BF3 once via Steam
+...
+```
+
+It finds Steam (native or flatpak) and BF3 in any Steam library
+automatically; override with `STEAM_LIBRARY=/path/to/Steam`. Steam and
+Proton themselves can't come from nix — Steam is your distro's job, and
+Steam downloads Proton itself.
 
 ## Server: hosting & mod dev
 
