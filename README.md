@@ -6,14 +6,16 @@ running inside BF3's Steam **Proton** prefix. Needs
 
 ## TL;DR
 
-1. Install **BF3 via Steam** and launch it once, then quit — straight from
-   the CLI, no Steam UI browsing:
+1. Install **BF3 via Steam** and launch it once, then quit — from the CLI:
    ```sh
-   steam steam://install/1238820      # install BF3
-   steam steam://rungameid/1238820    # launch it once, then quit
+   steam steam://install/1238820           # install BF3
+   steam -applaunch 1238820 singleplayer   # launch once (campaign), then quit
    ```
-   (Windows game — enable Proton/Steam Play in Steam settings if you never
-   have.) The EA app stays open — leave it running for step 2.
+   The `singleplayer` argument boots the game directly and skips BF3's
+   browser-based Battlelog launcher (broken/painful on Linux); EA stays
+   online so saves sync. (Windows game — enable Proton/Steam Play in Steam
+   settings if you never have.) The EA app stays open after quitting —
+   leave it running for step 2.
 2. `nix run github:VileEnd/vu-proton#vu-setup`
 3. `nix run github:VileEnd/vu-proton#vu` — play.
 

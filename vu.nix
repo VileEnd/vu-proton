@@ -65,7 +65,7 @@ in
         if [ -n "$pfx" ] && [ -d "$pfx" ]; then
           echo "✓ Proton prefix:  BF3 was launched at least once"
         else
-          echo "✗ Proton prefix missing — run: steam steam://rungameid/${appid}"
+          echo "✗ Proton prefix missing — run: steam -applaunch ${appid} singleplayer"
         fi
         if [ -f "''${pfx:-}/drive_c/Program Files/Electronic Arts/EA Desktop/EA Desktop/EADesktop.exe" ]; then
           echo "✓ EA Desktop:     present in the prefix"
@@ -99,14 +99,14 @@ in
         exit 1
       fi
       if [ ! -d "$pfx" ]; then
-        echo "BF3 Proton prefix missing — launch it once first:" >&2
-        echo "  steam steam://rungameid/${appid}" >&2
+        echo "BF3 Proton prefix missing — launch it once first (skips Battlelog):" >&2
+        echo "  steam -applaunch ${appid} singleplayer" >&2
         exit 1
       fi
       if ! pgrep -f EADesktop.exe >/dev/null 2>&1; then
         echo "WARNING: EA app not running — setup may fail. Launch BF3 briefly" >&2
-        echo "(steam steam://rungameid/${appid} — EA stays open after quitting)," >&2
-        echo "then re-run vu-setup." >&2
+        echo "(steam -applaunch ${appid} singleplayer — EA stays open after" >&2
+        echo "quitting), then re-run vu-setup." >&2
       fi
       installer="''${XDG_CACHE_HOME:-$HOME/.cache}/vu-installer.exe"
       echo ">> Downloading the latest VU installer..."
