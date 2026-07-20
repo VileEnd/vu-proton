@@ -1,13 +1,11 @@
-# Venice Unleashed (BF3 mod platform) helpers — VU lives inside BF3's Proton
-# prefix and is driven via protontricks. Based on the community Proton guide
-# by Envii (enviipv, BF3: Reality Mod).
+# Venice Unleashed via protontricks inside BF3's Proton prefix.
+# Based on Envii's guide (enviipv, BF3: Reality Mod).
 { pkgs }:
 let
-  appid = "1238820"; # BF3's Steam appid — constant, VU always targets it
+  appid = "1238820"; # BF3 — constant
 
-  # Shared discovery: Steam root (native or flatpak, STEAM_LIBRARY override),
-  # then whichever Steam library actually holds BF3 (libraryfolders.vdf can
-  # point at several). Sets: steamroot, bf3lib, pfx, exe.
+  # find steam (native/flatpak), the library holding BF3, and vu.exe
+  # sets: steamroot, bf3lib, pfx, exe
   findSteamLib = ''
     find_steam_root() {
       for d in "''${STEAM_LIBRARY:-}" \
@@ -41,10 +39,8 @@ let
       pfx="''${bf3lib:+$bf3lib/steamapps/compatdata/${appid}/pfx}"
       exe="''${pfx:+$pfx/drive_c/users/steamuser/AppData/Local/VeniceUnleashed/client/vu.exe}"
     }
-    # Prefer the host distro's protontricks when present: the nixpkgs build
-    # has the Steam Runtime container patched off, which is correct on NixOS
-    # but breaks GPU access (OpenGL/DXVK errors) on other distros. The nix
-    # copy stays as fallback so the commands always work.
+    # prefer the distro's protontricks: the nixpkgs build has the Steam
+    # Runtime patched off — fine on NixOS, no GPU on other distros
     PT_LAUNCH="$(command -v protontricks-launch)"
     PT="$(command -v protontricks)"
     for p in "$HOME/.local/bin" /usr/local/bin /usr/bin; do
@@ -54,6 +50,7 @@ let
         break
       fi
     done
+    export PT PT_LAUNCH
   '';
 in
 {
@@ -67,7 +64,7 @@ in
     ];
     text = ''
       ${findSteamLib}
-      # --check: preflight only — walk the guide's prerequisites and report.
+      # --check: walk the prereqs, print what's missing
       if [ "''${1:-}" = "--check" ]; then
         locate_vu || exit 1
         echo "✓ Steam:          $steamroot"
@@ -109,8 +106,7 @@ in
         exit 0
       fi
 
-      # Install flow. EA app must be running during THIS setup only (it still
-      # is right after closing BF3) — normal VU launches don't need it.
+      # install — the EA app only needs to run during this, not for playing
       locate_vu || exit 1
       if [ -z "$bf3lib" ]; then
         echo "BF3 is not installed — run: steam steam://install/${appid}" >&2
@@ -144,14 +140,13 @@ in
     runtimeInputs = [ pkgs.protontricks ];
     text = ''
       ${findSteamLib}
-      # Dedicated VU server (hosting / mod development). Own mods go into
-      # Admin/Mods and are activated by name in Admin/ModList.txt.
+      # dedicated server — mods: Admin/Mods/<name> + line in Admin/ModList.txt
       locate_vu || exit 1
       if [ -z "$exe" ] || [ ! -f "$exe" ]; then
         echo "vu.exe not found — run vu-setup first (or vu-setup --check)." >&2
         exit 1
       fi
-      # default instance dir per VU docs: "My Documents\Battlefield 3\Server"
+      # VU default: My Documents\Battlefield 3\Server
       inst="$pfx/drive_c/users/steamuser/Documents/Battlefield 3/Server"
       mkdir -p "$inst/Admin/Mods"
       echo "Server instance dir: $inst"
@@ -159,7 +154,7 @@ in
         echo "NOTE: no server key yet — create one at https://veniceunleashed.net/keys" >&2
         echo "      and save it as: $inst/server.key" >&2
       fi
-      # extra args pass through, e.g.: vu-server -headless
+      # args pass through, e.g. -headless
       exec "$PT_LAUNCH" --appid ${appid} "$exe" -server -dedicated "$@"
     '';
   };
@@ -169,7 +164,7 @@ in
     runtimeInputs = [ pkgs.protontricks ];
     text = ''
       ${findSteamLib}
-      # Launch Venice Unleashed. --verify: re-check BF3 ownership with EA.
+      # --verify: re-check BF3 ownership
       locate_vu || exit 1
       if [ -z "$exe" ] || [ ! -f "$exe" ]; then
         echo "vu.exe not found — run vu-setup first (or vu-setup --check)." >&2
